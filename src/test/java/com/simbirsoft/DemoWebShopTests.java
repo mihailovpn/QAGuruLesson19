@@ -1,26 +1,24 @@
 package com.simbirsoft;
 
 import com.codeborne.selenide.Configuration;
-import com.simbirsoft.helpers.AllureRestAssuredFilter;
 import io.qameta.allure.Story;
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Cookie;
-import io.qameta.allure.restassured.AllureRestAssured;
 
-import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
+import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
 
-@Story("Login tests")
+@Story("Adding to cart")
 public class DemoWebShopTests {
-    public String userLogin = "qaguru@qa.guru";
-    public String userPassword = "qaguru@qa.guru1";
+    protected Cookie cookieWeb;
 
     @BeforeAll
     static void configureBaseUrl() {
@@ -28,43 +26,29 @@ public class DemoWebShopTests {
         Configuration.baseUrl = "http://demowebshop.tricentis.com";
     }
 
+
     @Test
-    @DisplayName("Successful authorization to some demowebshop (API + UI)")
+    @DisplayName("Successful adding to cart (API + UI)")
     void loginWithCookieTest() {
-        step("Get cookie by api and set it to browser", () -> {
-            String authorizationCookie =
-                    given()
-                            .filter(AllureRestAssuredFilter.withCustomTemplates())
-                            .contentType("application/x-www-form-urlencoded; charset=UTF-8")
-                            .formParam("Email", userLogin)
-                            .formParam("Password", userPassword)
-                            .when()
-                            .post("/login")
-                            .then()
-                            .statusCode(302)
-                            .extract()
-                            .cookie("NOPCOMMERCE.AUTH");
-
-            step("Open minimal content, because cookie can be set when site is opened", () ->
-                    open("/Themes/DefaultClean/Content/images/logo.png"));
-
-            step("Set cookie to to browser", () ->
-                    getWebDriver().manage().addCookie(
-                            new Cookie("NOPCOMMERCE.AUTH", authorizationCookie)));
             step("Open smartphone page", () ->
                     open("/smartphone"));
+
+            step("Get cookie from browser", () ->
+                    cookieWeb = getWebDriver().manage().getCookieNamed("Nop.customer"));
 
             step("Add smartphone to cart", () ->
                     $(".add-to-cart-button").click());
 
-            step("", () ->
+            step("Check amount of smartphones in cart", () ->
                     given()
-                            .cookie(authorizationCookie)
+                            .cookie(cookieWeb.toString())
                             .when()
-                            .get("/cart")
+                            .post("/addproducttocart/details/43/1")
                             .then()
-                            .statusCode(200));
-        });
+                            .statusCode(200)
+                            .body("success", is(true))
+                            .body("updatetopcartsectionhtml", is("(2)")) //2 - because 1 added by UI and 1 by API
+            );
 
 
     }

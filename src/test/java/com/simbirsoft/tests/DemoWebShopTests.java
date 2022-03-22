@@ -1,7 +1,8 @@
-package com.simbirsoft;
+package com.simbirsoft.tests;
 
 import com.codeborne.selenide.Configuration;
 import io.qameta.allure.Story;
+import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.openqa.selenium.Cookie;
 
 import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
+import static com.simbirsoft.filters.CustomLogFilter.customLogFilter;
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
@@ -28,28 +30,17 @@ public class DemoWebShopTests {
 
 
     @Test
-    @DisplayName("Successful adding to cart (API + UI)")
-    void loginWithCookieTest() {
-            step("Open smartphone page", () ->
-                    open("/smartphone"));
-
-            step("Get cookie from browser", () ->
-                    cookieWeb = getWebDriver().manage().getCookieNamed("Nop.customer"));
-
-            step("Add smartphone to cart", () ->
-                    $(".add-to-cart-button").click());
-
-            step("Check amount of smartphones in cart", () ->
+    @DisplayName("Adding smartphone to the cart")
+    void addingSmartphoneTest() {
                     given()
-                            .cookie(cookieWeb.toString())
+                            .filter(customLogFilter().withCustomTemplates())
+                            .log().all()
                             .when()
                             .post("/addproducttocart/details/43/1")
                             .then()
+                            .log().all()
                             .statusCode(200)
                             .body("success", is(true))
-                            .body("updatetopcartsectionhtml", is("(2)")) //2 - because 1 added by UI and 1 by API
-            );
-
-
+                            .body("updatetopcartsectionhtml", is("(1)"));
     }
 }

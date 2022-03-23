@@ -4,10 +4,7 @@ import com.codeborne.selenide.Configuration;
 import io.qameta.allure.Story;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.openqa.selenium.Cookie;
 
 import static com.codeborne.selenide.Selenide.*;
@@ -17,7 +14,7 @@ import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
-
+@Tag("Regress")
 @Story("Adding to cart")
 public class DemoWebShopTests {
     protected Cookie cookieWeb;
